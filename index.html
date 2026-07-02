@@ -565,19 +565,113 @@
     }
     .modal h3 { color: #e98d4f; margin-bottom: 16px; font-size: 1.1em; }
 
+    /* ===== Access Code Gate ===== */
+    .gate-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .gate-box {
+      background: white;
+      border-radius: 20px;
+      padding: 36px 28px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(233,141,79,0.18);
+      border: 2px solid var(--border);
+    }
+    .gate-icon { font-size: 2.5em; margin-bottom: 14px; }
+    .gate-box h2 { color: #e98d4f; font-size: 1.15em; font-weight: 800; margin-bottom: 8px; }
+    .gate-box p { color: var(--text-muted); font-size: 0.9em; margin-bottom: 22px; line-height: 1.5; }
+    .gate-input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.1em;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 2px;
+      color: #9f001a;
+      outline: none;
+      margin-bottom: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .gate-input:focus { border-color: #e98d4f; box-shadow: 0 0 0 3px rgba(233,141,79,0.15); }
+    .gate-error { color: #C62828; font-size: 0.85em; min-height: 20px; margin-bottom: 10px; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .gate-box.shake { animation: shake 0.4s ease; }
+
+    /* ===== Credits Badge ===== */
+    .nav-row { display: flex; align-items: center; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .credits-badge {
+      font-size: 0.8em;
+      font-weight: 700;
+      color: white;
+      background: rgba(255,255,255,0.18);
+      padding: 4px 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      white-space: nowrap;
+    }
+    .credits-badge.low { background: rgba(159,0,26,0.55); border-color: rgba(255,255,255,0.5); }
+
+    /* ===== Credit note in Step 5 ===== */
+    .credit-note {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #fdeee8;
+      border: 1.5px solid #e98d4f;
+      border-radius: 10px;
+      font-size: 0.88em;
+      color: #7a3030;
+      font-weight: 600;
+    }
+
   </style>
 </head>
 <body>
+
+<!-- ===== ACCESS CODE GATE ===== -->
+<div class="gate-overlay" id="gate-overlay">
+  <div class="gate-box">
+    <div class="gate-icon">🔐</div>
+    <h2>Team Building Activity Generator</h2>
+    <p>Enter your access code to continue.</p>
+    <input type="text" id="gate-input" class="gate-input"
+           placeholder="TBL-XXXX-XXXXX"
+           oninput="this.value = this.value.toUpperCase()"
+           onkeydown="if(event.key==='Enter') validateCode()">
+    <div class="gate-error" id="gate-error"></div>
+    <button class="btn btn-primary btn-full" onclick="validateCode()" id="gate-btn">🔓 Enter</button>
+  </div>
+</div>
 
 <!-- ===== TOP NAV ===== -->
 <div class="top-nav">
   <div class="top-nav-brand">
     <span class="brand-name">Team Building Activity Generator</span>
   </div>
-  <div class="top-nav-links">
-    <a href="#" class="nav-link active" onclick="showView('create')">✨ New</a>
-    <a href="#" class="nav-link" onclick="showView('history')">📋 History</a>
-    <a href="#" class="nav-link" onclick="showView('sample')">👀 Sample</a>
+  <div class="nav-row">
+    <div class="top-nav-links">
+      <a href="#" class="nav-link active" onclick="showView('create')">✨ New</a>
+      <a href="#" class="nav-link" onclick="showView('history')">📋 History</a>
+      <a href="#" class="nav-link" onclick="showView('sample')">👀 Sample</a>
+    </div>
+    <span class="credits-badge" id="credits-badge" style="display:none;">
+      🔋 <span id="credits-count">—</span>
+    </span>
   </div>
 </div>
 
@@ -858,6 +952,9 @@
       <div class="card">
         <h2>✅ Confirm & Generate</h2>
         <div id="summary-content" style="line-height: 1.8;"></div>
+        <div class="credit-note" id="credit-note" style="display:none;">
+          🔋 This generation will use <strong>1 credit</strong>. Remaining after: <span id="credits-after">—</span>
+        </div>
 
         <div class="step-nav" style="margin-top: 20px;">
           <button class="btn btn-outline" onclick="goToStep(4)">← Edit</button>
@@ -962,6 +1059,70 @@ let currentMarkdownA = '';
 let currentMarkdownB = '';
 let currentWinner = 'A';
 let showingVersion = 'winner';
+let currentAccessCode = '';
+let currentCredits = 0;
+
+// ===== Gate =====
+window.onload = function() { initGate(); };
+
+function initGate() {
+  const saved = sessionStorage.getItem('tbag_access_code');
+  if (saved) {
+    currentAccessCode = saved;
+    currentCredits = parseInt(sessionStorage.getItem('tbag_credits') || '0');
+    document.getElementById('gate-overlay').style.display = 'none';
+    updateCreditsBadge();
+  }
+}
+
+function validateCode() {
+  const code = document.getElementById('gate-input').value.trim().toUpperCase();
+  if (!code) { showGateError('Please enter your access code.'); return; }
+  const btn = document.getElementById('gate-btn');
+  btn.disabled = true; btn.textContent = 'Checking...';
+  const url = API_URL + '?action=getAccessStatus&code=' + encodeURIComponent(code) + '&app=games';
+  fetch(url).then(r => r.json()).then(result => {
+    btn.disabled = false; btn.innerHTML = '🔓 Enter';
+    if (result.success) {
+      currentAccessCode = code;
+      currentCredits = result.creditsRemaining !== undefined ? result.creditsRemaining : 0;
+      sessionStorage.setItem('tbag_access_code', code);
+      sessionStorage.setItem('tbag_credits', String(currentCredits));
+      document.getElementById('gate-overlay').style.display = 'none';
+      updateCreditsBadge();
+    } else {
+      shakeGate();
+      showGateError(result.message || 'Invalid or expired access code.');
+    }
+  }).catch(() => {
+    btn.disabled = false; btn.innerHTML = '🔓 Enter';
+    showGateError('Network error. Please try again.');
+  });
+}
+
+function showGateError(msg) { document.getElementById('gate-error').textContent = msg; }
+function shakeGate() {
+  const box = document.querySelector('.gate-box');
+  box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+  setTimeout(() => box.classList.remove('shake'), 500);
+}
+function showGateAgain() {
+  currentAccessCode = ''; currentCredits = 0;
+  sessionStorage.removeItem('tbag_access_code'); sessionStorage.removeItem('tbag_credits');
+  document.getElementById('gate-overlay').style.display = 'flex';
+  document.getElementById('gate-input').value = ''; showGateError(''); updateCreditsBadge();
+}
+function updateCreditsBadge() {
+  const badge = document.getElementById('credits-badge');
+  const count = document.getElementById('credits-count');
+  if (currentAccessCode) {
+    badge.style.display = 'inline-block';
+    count.textContent = currentCredits + ' credit' + (currentCredits !== 1 ? 's' : '');
+    badge.className = 'credits-badge' + (currentCredits <= 2 ? ' low' : '');
+  } else {
+    badge.style.display = 'none';
+  }
+}
 
 // ===== View Switching =====
 function showView(name) {
@@ -1258,7 +1419,8 @@ function getFormData() {
     purposes: getSelectedChips('cg-purposes').join(', '),
     includeDebrief: includeDebrief ? 'yes' : 'no',
     additionalNotes: document.getElementById('f-additionalNotes').value.trim(),
-    email: document.getElementById('f-email').value.trim()
+    email: document.getElementById('f-email').value.trim(),
+    accessCode: currentAccessCode
   };
 }
 
@@ -1285,6 +1447,15 @@ function buildSummary() {
   if (d.additionalNotes) addLine('📝', 'Additional Notes', d.additionalNotes);
   if (d.email) addLine('📧', 'Email', d.email);
   document.getElementById('summary-content').innerHTML = lines.join('');
+
+  const creditNote = document.getElementById('credit-note');
+  const creditsAfter = document.getElementById('credits-after');
+  if (currentAccessCode && creditNote) {
+    creditsAfter.textContent = Math.max(0, currentCredits - 1);
+    creditNote.style.display = 'block';
+  } else if (creditNote) {
+    creditNote.style.display = 'none';
+  }
 }
 
 // ===== Generate =====
@@ -1302,12 +1473,22 @@ function generateGames() {
   fetch(url)
     .then(r => r.json())
     .then(result => {
+      if (result.errorType === 'ACCESS_DENIED') {
+        showGateAgain();
+        showToast('Access denied. Please re-enter your code.', 'error');
+        return;
+      }
       if (result.success) {
         currentGameSetId = result.gameSetId;
         currentMarkdown = result.markdownContent;
         currentMarkdownA = result.markdownA || result.markdownContent;
         currentMarkdownB = result.markdownB || result.markdownContent;
         currentWinner = result.winner || 'A';
+        if (result.creditsRemaining !== undefined) {
+          currentCredits = result.creditsRemaining;
+          sessionStorage.setItem('tbag_credits', String(currentCredits));
+          updateCreditsBadge();
+        }
         showResult(result.markdownContent);
 
         const toggleBtn = document.getElementById('btn-toggle-version');
@@ -1472,7 +1653,7 @@ function sendEmail() {
 function loadHistory() {
   const listEl = document.getElementById('history-list');
   listEl.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading...</div></div>';
-  const url = API_URL + '?action=listGameSets';
+  const url = API_URL + '?action=listMyGameSets&accessCode=' + encodeURIComponent(currentAccessCode);
   fetch(url)
     .then(r => r.json())
     .then(result => {
