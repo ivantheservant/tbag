@@ -166,6 +166,10 @@
     .step-item.done .step-circle {
       background: #9f001a;
     }
+    .step-item.locked { cursor: not-allowed; }
+    .step-item.locked .step-circle { opacity: 0.45; }
+    .step-item.locked:hover { opacity: 1; }
+    .step-item.locked .step-label { opacity: 0.45; }
     .step-label {
       font-size: 0.7em;
       font-weight: 700;
@@ -251,6 +255,22 @@
       line-height: 1.5;
     }
     .time-warning strong { color: var(--warning); }
+
+    /* ===== Required Field Indicators ===== */
+    .required-mark { color: #9f001a; margin-left: 3px; }
+    .form-group input.field-error,
+    .form-group textarea.field-error,
+    .time-input-row input.field-error {
+      border-color: #C62828 !important;
+      box-shadow: 0 0 0 3px rgba(198,40,40,0.15) !important;
+    }
+    .radio-group.field-error,
+    .chip-group.field-error {
+      border: 1.5px dashed #C62828;
+      border-radius: 12px;
+      padding: 8px;
+      margin-top: 4px;
+    }
 
     /* ===== Buttons ===== */
     .btn {
@@ -481,45 +501,6 @@
       overflow-y: auto;
     }
 
-    /* ===== History ===== */
-    .history-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 16px 20px;
-      border: 1.5px solid var(--border);
-      border-left: 4px solid #e98d4f;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      background: white;
-      position: relative;
-    }
-    .history-card .info { flex: 1; }
-    .history-card .info h4 {
-      font-weight: 600; font-size: 1.05em; color: #9f001a;
-      margin: 0 0 4px; transition: color 0.2s;
-    }
-    .history-card .info p {
-      font-size: 0.85em; color: var(--text-muted); margin: 0;
-    }
-    .history-card .meta {
-      font-size: 0.78em; color: var(--text-muted); white-space: nowrap;
-    }
-    .history-card .hc-arrow {
-      font-size: 1.4em; color: var(--text-muted); transition: all 0.2s;
-      padding: 0 2px; flex-shrink: 0;
-    }
-    .history-card:hover {
-      transform: translateX(4px);
-      box-shadow: 0 4px 16px rgba(233,141,79,0.15);
-      border-color: #e98d4f;
-      background: #fef5f0;
-    }
-    .history-card:hover .info h4 { color: #e98d4f; }
-    .history-card:hover .hc-arrow { color: #e98d4f; transform: translateX(4px); }
-
     /* ===== Toast ===== */
     .toast {
       position: fixed;
@@ -666,7 +647,6 @@
   <div class="nav-row">
     <div class="top-nav-links">
       <a href="#" class="nav-link active" onclick="showView('create')">✨ New</a>
-      <a href="#" class="nav-link" onclick="showView('history')">📋 History</a>
       <a href="#" class="nav-link" onclick="showView('sample')">👀 Sample</a>
     </div>
     <span class="credits-badge" id="credits-badge" style="display:none;">
@@ -684,23 +664,23 @@
 
     <!-- Step Progress -->
     <div class="step-progress" id="step-progress">
-      <div class="step-item active" data-step="1" onclick="goToStep(1)">
+      <div class="step-item active" data-step="1" onclick="goToStepIfUnlocked(1)">
         <div class="step-circle">1</div>
         <div class="step-label">People</div>
       </div>
-      <div class="step-item" data-step="2" onclick="goToStep(2)">
+      <div class="step-item" data-step="2" onclick="goToStepIfUnlocked(2)">
         <div class="step-circle">2</div>
         <div class="step-label">Settings</div>
       </div>
-      <div class="step-item" data-step="3" onclick="goToStep(3)">
+      <div class="step-item" data-step="3" onclick="goToStepIfUnlocked(3)">
         <div class="step-circle">3</div>
         <div class="step-label">Rules</div>
       </div>
-      <div class="step-item" data-step="4" onclick="goToStep(4)">
+      <div class="step-item" data-step="4" onclick="goToStepIfUnlocked(4)">
         <div class="step-circle">4</div>
         <div class="step-label">Purpose</div>
       </div>
-      <div class="step-item" data-step="5" onclick="goToStep(5)">
+      <div class="step-item" data-step="5" onclick="goToStepIfUnlocked(5)">
         <div class="step-circle">5</div>
         <div class="step-label">Confirm</div>
       </div>
@@ -717,13 +697,13 @@
             <input type="text" id="f-ageRange" placeholder="e.g. 35–55" value="">
           </div>
           <div class="form-group">
-            <label>Headcount</label>
-            <input type="text" id="f-participantCount" placeholder="e.g. 20–30" value="">
+            <label>Headcount<span class="required-mark">*</span></label>
+            <input type="text" id="f-participantCount" placeholder="e.g. 20–30" value="" oninput="clearFieldError(this)">
           </div>
         </div>
 
         <div class="form-group">
-          <label>Relationship</label>
+          <label>Relationship<span class="required-mark">*</span></label>
           <div class="radio-group" id="rg-relationship">
             <div class="radio-chip" data-value="Couples" onclick="selectRadio(this)">💑 Couples</div>
             <div class="radio-chip" data-value="Friends" onclick="selectRadio(this)">🤝 Friends</div>
@@ -734,7 +714,7 @@
         </div>
 
         <div class="form-group">
-          <label>Familiarity</label>
+          <label>Familiarity<span class="required-mark">*</span></label>
           <div class="radio-group" id="rg-familiarity">
             <div class="radio-chip" data-value="First Meeting" onclick="selectRadio(this)">👋 First Meeting</div>
             <div class="radio-chip" data-value="Acquaintances" onclick="selectRadio(this)">🙂 Acquaintances</div>
@@ -758,7 +738,7 @@
 
         <div class="step-nav">
           <div></div>
-          <button class="btn btn-primary" onclick="goToStep(2)">Next →</button>
+          <button class="btn btn-primary" onclick="if(validateStep(1)) goToStep(2)">Next →</button>
         </div>
       </div>
     </div>
@@ -769,7 +749,7 @@
         <h2>⚙️ Settings</h2>
 
         <div class="form-group">
-          <label>Game Type <span class="label-hint">(multi-select)</span></label>
+          <label>Game Type <span class="label-hint">(multi-select)</span><span class="required-mark">*</span></label>
           <div class="chip-group" id="cg-gametype">
             <label class="chip" onclick="toggleChip(this, event)">
               <input type="checkbox" value="Icebreaker"> 🧊 Icebreaker
@@ -799,7 +779,7 @@
         </div>
 
         <div class="form-group">
-          <label>Venue</label>
+          <label>Venue<span class="required-mark">*</span></label>
           <div class="radio-group" id="rg-venue">
             <div class="radio-chip" data-value="Indoor" onclick="selectRadio(this)">🏠 Indoor</div>
             <div class="radio-chip" data-value="Outdoor" onclick="selectRadio(this)">🌳 Outdoor</div>
@@ -809,10 +789,10 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Available Time</label>
+            <label>Available Time<span class="required-mark">*</span></label>
             <div class="time-input-row">
               <input type="number" id="f-availableTime" min="5" max="480"
-                     placeholder="e.g. 60" oninput="clearTimeWarning()">
+                     placeholder="e.g. 60" oninput="clearTimeWarning(); clearFieldError(this);">
               <span class="time-unit">min</span>
             </div>
             <div class="hint">Minimum 5 minutes</div>
@@ -898,7 +878,7 @@
         <h2>🎯 Purpose</h2>
 
         <div class="form-group">
-          <label>Activity Purpose <span class="label-hint">(multi-select)</span></label>
+          <label>Activity Purpose <span class="label-hint">(multi-select)</span><span class="required-mark">*</span></label>
           <div class="chip-group" id="cg-purposes">
             <label class="chip" onclick="toggleChip(this, event)">
               <input type="checkbox" value="Icebreaker & Getting to Know Each Other"> 🧊 Icebreaker
@@ -942,7 +922,7 @@
 
         <div class="step-nav">
           <button class="btn btn-outline" onclick="goToStep(3)">← Back</button>
-          <button class="btn btn-primary" onclick="goToStep(5)">Confirm →</button>
+          <button class="btn btn-primary" onclick="if(validateStep(4)) goToStep(5)">Confirm →</button>
         </div>
       </div>
     </div>
@@ -998,21 +978,6 @@
   </div>
 
   <!-- ===================================================== -->
-  <!-- HISTORY VIEW -->
-  <!-- ===================================================== -->
-  <div class="view" id="view-history">
-    <div class="card">
-      <h2>📋 History</h2>
-      <div id="history-list">
-        <div class="loading">
-          <div class="loading-spinner"></div>
-          <div class="loading-text">Loading...</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================== -->
   <!-- SAMPLE VIEW -->
   <!-- ===================================================== -->
   <div class="view" id="view-sample">
@@ -1051,6 +1016,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbzP6lD_L7dU3df2JJ78cP4n
 
 // ===== State =====
 let currentStep = 1;
+let maxStepReached = 1;
 let includeChildren = false;
 let includeDebrief = true;
 let currentGameSetId = null;
@@ -1130,7 +1096,6 @@ function showView(name) {
   document.getElementById('view-' + name).classList.add('active');
   document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
   if (event && event.target) event.target.classList.add('active');
-  if (name === 'history') loadHistory();
   if (name === 'sample') renderSample();
   if (name === 'create') {
     const resultVisible = document.getElementById('step-result').style.display === 'block';
@@ -1265,14 +1230,84 @@ function goToStep(step) {
   if (step === 5) buildSummary();
   document.querySelectorAll('.step-content').forEach(s => s.style.display = 'none');
   document.getElementById('step-' + step).style.display = 'block';
+  maxStepReached = Math.max(maxStepReached, step);
   document.querySelectorAll('.step-item').forEach(item => {
     const s = parseInt(item.dataset.step);
-    item.classList.remove('active', 'done');
+    item.classList.remove('active', 'done', 'locked');
     if (s === step) item.classList.add('active');
-    else if (s < step) item.classList.add('done');
+    else if (s <= maxStepReached) item.classList.add('done');
+    else item.classList.add('locked');
   });
   currentStep = step;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToStepIfUnlocked(step) {
+  if (step > maxStepReached) {
+    showToast('⚠️ Please complete the previous steps first.', 'error');
+    return;
+  }
+  goToStep(step);
+}
+
+// ===== Required Field Validation =====
+const REQUIRED_FIELDS = {
+  1: [
+    { type: 'radio', groupId: 'rg-relationship', label: 'Relationship' },
+    { type: 'radio', groupId: 'rg-familiarity', label: 'Familiarity' },
+    { type: 'text', id: 'f-participantCount', label: 'Headcount' }
+  ],
+  2: [
+    { type: 'chips', groupId: 'cg-gametype', label: 'Game Type' },
+    { type: 'radio', groupId: 'rg-venue', label: 'Venue' },
+    { type: 'time', id: 'f-availableTime', label: 'Available Time' }
+  ],
+  4: [
+    { type: 'chips', groupId: 'cg-purposes', label: 'Purpose' }
+  ]
+};
+
+function clearFieldError(el) {
+  if (el) el.classList.remove('field-error');
+}
+
+function validateStep(step) {
+  const fields = REQUIRED_FIELDS[step] || [];
+  const missing = [];
+  let firstInvalidEl = null;
+
+  fields.forEach(f => {
+    let ok = true;
+    let targetEl = null;
+
+    if (f.type === 'radio') {
+      targetEl = document.getElementById(f.groupId);
+      ok = !!document.querySelector('#' + f.groupId + ' .radio-chip.selected');
+    } else if (f.type === 'chips') {
+      targetEl = document.getElementById(f.groupId);
+      ok = document.querySelectorAll('#' + f.groupId + ' .chip.selected').length > 0;
+    } else if (f.type === 'text') {
+      targetEl = document.getElementById(f.id);
+      ok = !!(targetEl && targetEl.value.trim());
+    } else if (f.type === 'time') {
+      targetEl = document.getElementById(f.id);
+      const v = parseInt(targetEl ? targetEl.value : '', 10);
+      ok = !!v && v >= 5;
+    }
+
+    if (targetEl) targetEl.classList.toggle('field-error', !ok);
+    if (!ok) {
+      missing.push(f.label);
+      if (!firstInvalidEl) firstInvalidEl = targetEl;
+    }
+  });
+
+  if (missing.length > 0) {
+    showToast('⚠️ Please complete: ' + missing.join(', '), 'error');
+    if (firstInvalidEl) firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  return true;
 }
 
 // ===== Time Warning Mins by Game Type =====
@@ -1293,16 +1328,10 @@ function clearTimeWarning() {
 }
 
 function goToStep2Next() {
+  if (!validateStep(2)) return;
+
   const timeVal = parseInt(document.getElementById('f-availableTime').value, 10);
   const warningEl = document.getElementById('time-warning');
-
-  if (!timeVal || timeVal < 5) {
-    document.getElementById('f-availableTime').classList.add('input-error');
-    warningEl.innerHTML = '⚠️ <strong>Please enter at least 5 minutes.</strong>';
-    warningEl.style.display = 'block';
-    return;
-  }
-
   const selectedTypes = getSelectedChips('cg-gametype');
   let warnMessages = [];
   selectedTypes.forEach(type => {
@@ -1324,6 +1353,7 @@ function goToStep2Next() {
         'Proceed anyway →' +
       '</button>';
     warningEl.style.display = 'block';
+    warningEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
 
@@ -1334,6 +1364,7 @@ function selectRadio(el) {
   const group = el.parentElement;
   group.querySelectorAll('.radio-chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
+  group.classList.remove('field-error');
   if (group.id === 'rg-relationship') updateDebriefLabel();
 }
 
@@ -1344,8 +1375,13 @@ function toggleChip(el, event) {
   const cb = el.querySelector('input[type="checkbox"]');
   if (cb) cb.checked = el.classList.contains('selected');
   const chipGroup = el.closest('.chip-group');
-  if (chipGroup && (chipGroup.id === 'cg-gametype' || chipGroup.id === 'cg-purposes')) {
-    updateDebriefLabel();
+  if (chipGroup) {
+    if (chipGroup.querySelectorAll('.chip.selected').length > 0) {
+      chipGroup.classList.remove('field-error');
+    }
+    if (chipGroup.id === 'cg-gametype' || chipGroup.id === 'cg-purposes') {
+      updateDebriefLabel();
+    }
   }
 }
 
@@ -1475,6 +1511,7 @@ function generateGames() {
     .then(result => {
       if (result.errorType === 'ACCESS_DENIED') {
         showGateAgain();
+        goToStep(5);
         showToast('Access denied. Please re-enter your code.', 'error');
         return;
       }
@@ -1649,62 +1686,10 @@ function sendEmail() {
     .catch(err => { showToast('Network error: ' + err.message, 'error'); });
 }
 
-// ===== History =====
-function loadHistory() {
-  const listEl = document.getElementById('history-list');
-  listEl.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading...</div></div>';
-  const url = API_URL + '?action=listMyGameSets&accessCode=' + encodeURIComponent(currentAccessCode);
-  fetch(url)
-    .then(r => r.json())
-    .then(result => {
-      if (result.success && result.gameSets && result.gameSets.length > 0) {
-        listEl.innerHTML = result.gameSets.map(g => `
-          <div class="history-card" onclick="loadGameSet('${g.id}')">
-            <div class="info">
-              <h4>${g.name || 'Team Building Activity'}</h4>
-              <p>${g.gameCount || '?'} games · ${g.venue || ''} ${g.purposes ? '· ' + g.purposes : ''}</p>
-            </div>
-            <div class="meta">${g.createdAt ? new Date(g.createdAt).toLocaleDateString() : ''}</div>
-            <div class="hc-arrow">›</div>
-          </div>
-        `).join('');
-      } else {
-        listEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:30px;">No history yet</p>';
-      }
-    })
-    .catch(err => {
-      listEl.innerHTML = '<p style="text-align:center;color:var(--danger);padding:30px;">Load failed: ' + err.message + '</p>';
-    });
-}
-
-function loadGameSet(gameSetId) {
-  showToast('Loading...', '');
-  const url = API_URL + '?action=getGameSet&gameSetId=' + encodeURIComponent(gameSetId);
-  fetch(url)
-    .then(r => r.json())
-    .then(result => {
-      if (result.success && result.gameSet.markdownContent) {
-        currentGameSetId = result.gameSet.id;
-        currentMarkdown = result.gameSet.markdownContent;
-        currentMarkdownA = '';
-        currentMarkdownB = '';
-        currentWinner = 'A';
-        showingVersion = 'winner';
-        document.getElementById('btn-toggle-version').style.display = 'none';
-        document.getElementById('version-badge').style.display = 'none';
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById('view-create').classList.add('active');
-        showResult(result.gameSet.markdownContent);
-      } else {
-        showToast('Load failed', 'error');
-      }
-    })
-    .catch(err => { showToast('Network error: ' + err.message, 'error'); });
-}
-
 // ===== Reset =====
 function resetForm() {
   document.getElementById('step-progress').style.display = 'flex';
+  maxStepReached = 1;
   goToStep(1);
   currentGameSetId = null;
   currentMarkdown = '';
@@ -1763,6 +1748,9 @@ function resetForm() {
   if (additionalNotes) additionalNotes.value = '';
   const emailField = document.getElementById('f-email');
   if (emailField) emailField.value = '';
+
+  // Clear any leftover required-field error highlights
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
 }
 
 // ===== Toast =====
