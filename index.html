@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Team Building Activity Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:       #e98d4f;
+      --primary-dark:  #c96a2a;
+      --primary-light: #9f001a;
+      --accent:        #e98d4f;
+      --accent-light:  #f8c8a0;
+      --success:       #2E7D32;
+      --warning:       #c96a2a;
+      --danger:        #C62828;
+      --bg:            #f6d6d6;
+      --card-bg:       #FFFFFF;
+      --text:          #2a0808;
+      --text-light:    #7a3030;
+      --text-muted:    #a87060;
+      --border:        #f0b8b8;
+      --step-inactive: #c8a8a8;
+      --chip-bg:       #fdeee8;
+      --chip-sel:      #9f001a;
+      --radius:        14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Nunito", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== Top Nav ===== */
+    .top-nav {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 20px 10px;
+      background: #e98d4f;
+      border-bottom: 3px solid #9f001a;
+      text-align: center;
+    }
+    .top-nav-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      margin-bottom: 10px;
+    }
+    .brand-name {
+      font-size: 1.15em;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .top-nav-links { display: flex; gap: 6px; justify-content: center; }
+    .nav-link {
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.85em;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+
+    /* ===== Layout ===== */
+    .main-content { max-width: 700px; margin: 0 auto; padding: 20px 16px 40px; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 24px 22px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(233,141,79,0.10);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #9f001a, #e98d4f);
+    }
+    .card h2 {
+      font-size: 1.2em;
+      font-weight: 800;
+      color: #e98d4f;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h3 {
+      font-size: 1em;
+      font-weight: 700;
+      color: #e98d4f;
+      margin: 16px 0 10px;
+    }
+
+    /* ===== Step Progress ===== */
+    .step-progress {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      padding: 20px 10px 10px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    .step-progress::before {
+      content: '';
+      position: absolute;
+      top: 34px;
+      left: 15%;
+      right: 15%;
+      height: 2px;
+      background: var(--border);
+      z-index: 0;
+    }
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+      transition: opacity 0.2s;
+    }
+    .step-item:hover { opacity: 0.8; }
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--step-inactive);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85em;
+      transition: all 0.3s;
+      margin-bottom: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .step-item.active .step-circle {
+      background: #e98d4f;
+      transform: scale(1.2);
+      box-shadow: 0 3px 10px rgba(233,141,79,0.40);
+    }
+    .step-item.done .step-circle {
+      background: #9f001a;
+    }
+    .step-label {
+      font-size: 0.7em;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.3;
+    }
+    .step-item.active .step-label { color: #e98d4f; }
+
+    /* ===== Forms ===== */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 700;
+      font-size: 0.88em;
+      color: var(--text-light);
+      letter-spacing: 0.2px;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95em;
+      color: #9f001a;
+      background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: #e98d4f;
+      box-shadow: 0 0 0 3px rgba(233,141,79,0.15);
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .hint { font-size: 0.82em; color: var(--text-muted); margin-top: 5px; }
+    .label-hint { font-size: 0.82em; font-weight: 400; color: var(--text-muted); }
+    .time-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .time-input-row input[type="number"] {
+      width: 100px;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1em;
+      font-weight: 700;
+      color: #9f001a;
+      background: white;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -moz-appearance: textfield;
+    }
+    .time-input-row input[type="number"]::-webkit-inner-spin-button,
+    .time-input-row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .time-input-row input[type="number"]:focus {
+      border-color: #e98d4f;
+      box-shadow: 0 0 0 3px rgba(233,141,79,0.15);
+    }
+    .time-input-row input[type="number"].input-error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(198,40,40,0.12);
+    }
+    .time-unit { font-size: 0.88em; font-weight: 600; color: var(--text-light); }
+    .time-warning {
+      margin-top: 8px;
+      padding: 10px 14px;
+      background: #FFF3E0;
+      border: 1.5px solid #e98d4f;
+      border-radius: 10px;
+      font-size: 0.88em;
+      color: #7a3030;
+      line-height: 1.5;
+    }
+    .time-warning strong { color: var(--warning); }
+
+    /* ===== Buttons ===== */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9em;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: #e98d4f;
+      color: white;
+      box-shadow: 0 3px 10px rgba(233,141,79,0.30);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(233,141,79,0.45); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: #9f001a; color: white; }
+    .btn-secondary:hover { background: #7a0014; }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #e98d4f;
+      color: #e98d4f;
+    }
+    .btn-outline:hover { background: var(--chip-bg); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-small { padding: 6px 12px; font-size: 0.82em; border-radius: 8px; }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+
+    /* ===== Step Nav ===== */
+    .step-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===== Radio & Chip ===== */
+    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .radio-chip {
+      padding: 7px 14px;
+      background: var(--chip-bg);
+      border: 2px solid transparent;
+      border-radius: 22px;
+      cursor: pointer;
+      font-size: 0.88em;
+      font-weight: 700;
+      color: var(--text-light);
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .radio-chip:hover { border-color: #e98d4f; }
+    .radio-chip.selected {
+      background: #9f001a;
+      border-color: #9f001a;
+      color: white;
+    }
+
+    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .chip {
+      display: flex;
+      align-items: center;
+      line-height: 1.3;
+      gap: 7px;
+      padding: 7px 13px;
+      background: var(--chip-bg);
+      border: 2px solid transparent;
+      border-radius: 22px;
+      cursor: pointer;
+      font-size: 0.88em;
+      font-weight: 700;
+      color: var(--text-light);
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .chip:hover { border-color: #e98d4f; }
+    .chip.selected {
+      background: #9f001a;
+      border-color: #9f001a;
+      color: white;
+    }
+    .chip input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: #9f001a;
+      cursor: pointer;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    /* ===== Toggle ===== */
+    .toggle-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+    .toggle {
+      width: 46px; height: 26px;
+      background: #CFD8DC;
+      border-radius: 13px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.25s;
+      flex-shrink: 0;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .toggle.on { background: #e98d4f; }
+    .toggle.on::after { transform: translateX(20px); }
+    .toggle-label { font-size: 0.9em; font-weight: 600; color: var(--text); }
+    .conditional { margin-top: 12px; padding: 14px; background: var(--chip-bg); border-radius: 10px; display: none; }
+    .conditional.show { display: block; }
+
+    /* ===== Loading ===== */
+    .loading { text-align: center; padding: 40px 20px; }
+    .loading-spinner {
+      width: 44px; height: 44px;
+      border: 4px solid var(--border);
+      border-top-color: #e98d4f;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 1.1em; font-weight: 700; color: #e98d4f; margin-bottom: 6px; }
+    .loading-sub { font-size: 0.85em; color: var(--text-muted); }
+
+    /* ===== Summary ===== */
+    .summary-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92em;
+    }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-icon { width: 22px; text-align: center; flex-shrink: 0; margin-top: 1px; }
+    .summary-label { font-weight: 700; color: var(--text-light); width: 160px; flex-shrink: 0; }
+    .summary-value { color: var(--text); flex: 1; }
+
+    /* ===== Generate Button ===== */
+    #btn-generate {
+      background: #e98d4f;
+      color: white;
+      font-size: 1.05em;
+      font-weight: 800;
+      padding: 14px 28px;
+      box-shadow: 0 4px 14px rgba(233,141,79,0.35);
+    }
+    #btn-generate:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(233,141,79,0.50); }
+
+    /* ===== Result ===== */
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .view-toggle { display: flex; gap: 4px; }
+    .view-toggle-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 8px;
+      background: var(--chip-bg);
+      color: var(--text-light);
+      font-weight: 700;
+      font-size: 0.82em;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .view-toggle-btn.active { background: #e98d4f; color: white; }
+    .result-content { line-height: 1.75; }
+    .result-content h1 {
+      color: #9f001a;
+      font-size: 1.2em;
+      margin: 22px 0 10px;
+    }
+    .result-content h2 {
+      color: #e98d4f;
+      font-size: 1.1em;
+      margin: 20px 0 8px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--accent-light);
+    }
+    .result-content h3 {
+      color: #e98d4f;
+      font-size: 1em;
+      margin: 14px 0 6px;
+    }
+    .result-content ul, .result-content ol { padding-left: 20px; margin: 6px 0; }
+    .result-content li { margin-bottom: 4px; }
+    .result-content strong { color: #9f001a; }
+    .result-content table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+    .result-content th, .result-content td {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .result-content th { background: var(--chip-bg); font-weight: 700; color: var(--text-light); }
+    .result-content hr { border: none; border-top: 2px solid var(--border); margin: 20px 0; }
+    .result-content p { margin: 6px 0; }
+    .markdown-raw {
+      background: #fef5f0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82em;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    /* ===== History ===== */
+    .history-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border: 1.5px solid var(--border);
+      border-left: 4px solid #e98d4f;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+      position: relative;
+    }
+    .history-card .info { flex: 1; }
+    .history-card .info h4 {
+      font-weight: 600; font-size: 1.05em; color: #9f001a;
+      margin: 0 0 4px; transition: color 0.2s;
+    }
+    .history-card .info p {
+      font-size: 0.85em; color: var(--text-muted); margin: 0;
+    }
+    .history-card .meta {
+      font-size: 0.78em; color: var(--text-muted); white-space: nowrap;
+    }
+    .history-card .hc-arrow {
+      font-size: 1.4em; color: var(--text-muted); transition: all 0.2s;
+      padding: 0 2px; flex-shrink: 0;
+    }
+    .history-card:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 16px rgba(233,141,79,0.15);
+      border-color: #e98d4f;
+      background: #fef5f0;
+    }
+    .history-card:hover .info h4 { color: #e98d4f; }
+    .history-card:hover .hc-arrow { color: #e98d4f; transform: translateX(4px); }
+
+    /* ===== Toast ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #2a0808;
+      color: white;
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.9em;
+      z-index: 9999;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    .modal h3 { color: #e98d4f; margin-bottom: 16px; font-size: 1.1em; }
+
+  </style>
+</head>
+<body>
+
+<!-- ===== TOP NAV ===== -->
+<div class="top-nav">
+  <div class="top-nav-brand">
+    <span class="brand-name">Team Building Activity Generator</span>
+  </div>
+  <div class="top-nav-links">
+    <a href="#" class="nav-link active" onclick="showView('create')">✨ New</a>
+    <a href="#" class="nav-link" onclick="showView('history')">📋 History</a>
+    <a href="#" class="nav-link" onclick="showView('sample')">👀 Sample</a>
+  </div>
+</div>
+
+<div class="main-content">
+
+  <!-- ===================================================== -->
+  <!-- CREATE VIEW -->
+  <!-- ===================================================== -->
+  <div class="view active" id="view-create">
+
+    <!-- Step Progress -->
+    <div class="step-progress" id="step-progress">
+      <div class="step-item active" data-step="1" onclick="goToStep(1)">
+        <div class="step-circle">1</div>
+        <div class="step-label">People</div>
+      </div>
+      <div class="step-item" data-step="2" onclick="goToStep(2)">
+        <div class="step-circle">2</div>
+        <div class="step-label">Settings</div>
+      </div>
+      <div class="step-item" data-step="3" onclick="goToStep(3)">
+        <div class="step-circle">3</div>
+        <div class="step-label">Rules</div>
+      </div>
+      <div class="step-item" data-step="4" onclick="goToStep(4)">
+        <div class="step-circle">4</div>
+        <div class="step-label">Purpose</div>
+      </div>
+      <div class="step-item" data-step="5" onclick="goToStep(5)">
+        <div class="step-circle">5</div>
+        <div class="step-label">Confirm</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Participants -->
+    <div class="step-content" id="step-1">
+      <div class="card">
+        <h2>👥 Participants</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Age Range</label>
+            <input type="text" id="f-ageRange" placeholder="e.g. 35–55" value="">
+          </div>
+          <div class="form-group">
+            <label>Headcount</label>
+            <input type="text" id="f-participantCount" placeholder="e.g. 20–30" value="">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Relationship</label>
+          <div class="radio-group" id="rg-relationship">
+            <div class="radio-chip" data-value="Couples" onclick="selectRadio(this)">💑 Couples</div>
+            <div class="radio-chip" data-value="Friends" onclick="selectRadio(this)">🤝 Friends</div>
+            <div class="radio-chip" data-value="Colleagues" onclick="selectRadio(this)">💼 Colleagues</div>
+            <div class="radio-chip" data-value="Church Members" onclick="selectRadio(this)">⛪ Church Members</div>
+            <div class="radio-chip" data-value="Mixed Group" onclick="selectRadio(this)">🌈 Mixed Group</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Familiarity</label>
+          <div class="radio-group" id="rg-familiarity">
+            <div class="radio-chip" data-value="First Meeting" onclick="selectRadio(this)">👋 First Meeting</div>
+            <div class="radio-chip" data-value="Acquaintances" onclick="selectRadio(this)">🙂 Acquaintances</div>
+            <div class="radio-chip" data-value="Close Friends" onclick="selectRadio(this)">😄 Close Friends</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Include Children?</label>
+          <div class="toggle-row">
+            <div class="toggle" id="toggle-children" onclick="toggleChildren()"></div>
+            <span class="toggle-label" id="toggle-children-label">No children</span>
+          </div>
+          <div class="conditional" id="children-section">
+            <div class="form-group">
+              <label>Children's Age Range</label>
+              <input type="text" id="f-childrenAgeRange" placeholder="e.g. 7–16">
+            </div>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <div></div>
+          <button class="btn btn-primary" onclick="goToStep(2)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Settings -->
+    <div class="step-content" id="step-2" style="display:none;">
+      <div class="card">
+        <h2>⚙️ Settings</h2>
+
+        <div class="form-group">
+          <label>Game Type <span class="label-hint">(multi-select)</span></label>
+          <div class="chip-group" id="cg-gametype">
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Icebreaker"> 🧊 Icebreaker
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Team Building"> 🤝 Team Building
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Competition"> 🏆 Competition
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Creative Collaboration"> 🎨 Creative Collaboration
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Communication & Sharing"> 💬 Communication & Sharing
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Faith-based"> 🙏 Faith-based
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Problem Solving"> 🎯 Problem Solving
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Drama & Role Play"> 🎭 Drama & Role Play
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Venue</label>
+          <div class="radio-group" id="rg-venue">
+            <div class="radio-chip" data-value="Indoor" onclick="selectRadio(this)">🏠 Indoor</div>
+            <div class="radio-chip" data-value="Outdoor" onclick="selectRadio(this)">🌳 Outdoor</div>
+            <div class="radio-chip" data-value="Either" onclick="selectRadio(this)">🔄 Either</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Available Time</label>
+            <div class="time-input-row">
+              <input type="number" id="f-availableTime" min="5" max="480"
+                     placeholder="e.g. 60" oninput="clearTimeWarning()">
+              <span class="time-unit">min</span>
+            </div>
+            <div class="hint">Minimum 5 minutes</div>
+            <div class="time-warning" id="time-warning" style="display:none;"></div>
+          </div>
+          <div class="form-group">
+            <label>Number of Games</label>
+            <div class="radio-group" id="rg-gamecount">
+              <div class="radio-chip" data-value="2" onclick="selectRadio(this)">2</div>
+              <div class="radio-chip" data-value="3" onclick="selectRadio(this)">3</div>
+              <div class="radio-chip" data-value="4" onclick="selectRadio(this)">4</div>
+              <div class="radio-chip" data-value="5" onclick="selectRadio(this)">5</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn btn-outline" onclick="goToStep(1)">← Back</button>
+          <button class="btn btn-primary" onclick="goToStep2Next()">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Special Requirements -->
+    <div class="step-content" id="step-3" style="display:none;">
+      <div class="card">
+        <h2>⚠️ Special Requirements</h2>
+
+        <div class="form-group">
+          <label>Restrictions <span class="label-hint">(multi-select)</span></label>
+          <div class="chip-group" id="cg-restrictions">
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="No cross-gender physical contact">
+              🚫 No cross-gender contact
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Minimal props (daily items only if needed)">
+              📦 Minimal props
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="No intense physical exercise">
+              🏃 No intense exercise
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Mobility friendly (wheelchair accessible)">
+              ♿ Mobility friendly
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="No reading or writing required">
+              ✏️ No reading / writing
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="No awkward or overly personal interactions">
+              😳 No awkward moments
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Other Requirements <span class="label-hint">(free text)</span></label>
+          <textarea id="f-otherRequirements" placeholder="e.g. one wheelchair user, small venue, toddlers present..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Grouping Rule</label>
+          <div class="radio-group" id="rg-grouping">
+            <div class="radio-chip" data-value="Split couples / families" onclick="selectRadio(this)">🔀 Split couples / families</div>
+            <div class="radio-chip" data-value="Free grouping" onclick="selectRadio(this)">🎲 Free grouping</div>
+            <div class="radio-chip" data-value="No grouping" onclick="selectRadio(this)">👤 No grouping</div>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn btn-outline" onclick="goToStep(2)">← Back</button>
+          <button class="btn btn-primary" onclick="goToStep(4)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Purpose & Debrief -->
+    <div class="step-content" id="step-4" style="display:none;">
+      <div class="card">
+        <h2>🎯 Purpose</h2>
+
+        <div class="form-group">
+          <label>Activity Purpose <span class="label-hint">(multi-select)</span></label>
+          <div class="chip-group" id="cg-purposes">
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Icebreaker & Getting to Know Each Other"> 🧊 Icebreaker
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Building Relationships"> 💕 Building Relationships
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Faith Reflection"> ✝️ Faith Reflection
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Teamwork"> 🤝 Teamwork
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Just for Fun"> 🎉 Just for Fun
+            </label>
+            <label class="chip" onclick="toggleChip(this, event)">
+              <input type="checkbox" value="Values Exploration"> 💡 Values Exploration
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Include Debrief Questions per Game?</label>
+          <div class="toggle-row">
+            <div class="toggle on" id="toggle-debrief" onclick="toggleDebrief()"></div>
+            <span class="toggle-label" id="toggle-debrief-label">Include debrief</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Additional Notes</label>
+          <textarea id="f-additionalNotes" placeholder="e.g. part of a retreat, want everyone to get to know each other better..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>📧 Email Results <span class="label-hint">(optional)</span></label>
+          <input type="email" id="f-email" placeholder="your@email.com">
+          <div class="hint">The game booklet will be emailed automatically upon completion.</div>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn btn-outline" onclick="goToStep(3)">← Back</button>
+          <button class="btn btn-primary" onclick="goToStep(5)">Confirm →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Confirm & Generate -->
+    <div class="step-content" id="step-5" style="display:none;">
+      <div class="card">
+        <h2>✅ Confirm & Generate</h2>
+        <div id="summary-content" style="line-height: 1.8;"></div>
+
+        <div class="step-nav" style="margin-top: 20px;">
+          <button class="btn btn-outline" onclick="goToStep(4)">← Edit</button>
+          <button class="btn btn-primary btn-full" id="btn-generate" onclick="generateGames()">
+            🎯 ✨ Generate Games!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GENERATING STATE -->
+    <div class="step-content" id="step-generating" style="display:none;">
+      <div class="card">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text" id="loading-text">🎯 AI is designing your games...</div>
+          <div class="loading-sub" id="loading-sub">Usually takes 30–90 seconds, please wait...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT STATE -->
+    <div class="step-content" id="step-result" style="display:none;">
+      <div class="card" style="padding: 15px;">
+        <div class="result-actions">
+          <div class="view-toggle">
+            <button class="view-toggle-btn active" onclick="switchResultView('formatted', this)">📖 Formatted</button>
+            <button class="view-toggle-btn" onclick="switchResultView('markdown', this)">📝 Markdown</button>
+          </div>
+          <button class="btn btn-small btn-outline" onclick="copyMarkdown()">📋 Copy Markdown</button>
+          <button class="btn btn-small btn-outline" onclick="openEmailModal()">📧 Send Email</button>
+          <button class="btn btn-small btn-secondary" onclick="resetForm()">✨ Generate Again</button>
+          <button class="btn btn-small btn-outline" id="btn-toggle-version" style="display:none;" onclick="toggleVersion()">🔄 See Alternative</button>
+        </div>
+        <div id="version-badge" style="display:none; margin:8px 0 4px; font-size:12px; color:#7a3030;"></div>
+        <div id="result-formatted" class="result-content"></div>
+        <div id="result-markdown" class="markdown-raw" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- HISTORY VIEW -->
+  <!-- ===================================================== -->
+  <div class="view" id="view-history">
+    <div class="card">
+      <h2>📋 History</h2>
+      <div id="history-list">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- SAMPLE VIEW -->
+  <!-- ===================================================== -->
+  <div class="view" id="view-sample">
+    <div class="card" style="padding: 15px;">
+      <div class="result-actions">
+        <span style="font-weight:600; color:#e98d4f; padding:8px;">👀 Sample Output — this is what your results look like</span>
+        <button class="btn btn-small btn-primary" onclick="showView('create');">✨ Generate Your Own</button>
+      </div>
+      <div class="result-content" id="sample-content"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EMAIL MODAL -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal">
+    <h3>📧 Send Game Booklet</h3>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="modal-email" placeholder="your@email.com">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="sendEmail()">📧 Send</button>
+      <button class="btn btn-outline" onclick="closeEmailModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Configuration =====
+const API_URL = 'https://script.google.com/macros/s/AKfycbzP6lD_L7dU3df2JJ78cP4nAamnawAyxaoIR-PxOToBZncf4-FHicmY2zXXZEwW2GpM/exec';
+
+// ===== State =====
+let currentStep = 1;
+let includeChildren = false;
+let includeDebrief = true;
+let currentGameSetId = null;
+let currentMarkdown = '';
+let currentMarkdownA = '';
+let currentMarkdownB = '';
+let currentWinner = 'A';
+let showingVersion = 'winner';
+
+// ===== View Switching =====
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  if (name === 'history') loadHistory();
+  if (name === 'sample') renderSample();
+  if (name === 'create') {
+    const resultVisible = document.getElementById('step-result').style.display === 'block';
+    const generatingVisible = document.getElementById('step-generating').style.display === 'block';
+    if (resultVisible || generatingVisible) resetForm();
+  }
+}
+
+// ===== Sample Data =====
+const SAMPLE_MARKDOWN = `# Team Building Activity Booklet
+## Church Fellowship — Adults (35–55) — Indoor · 90 minutes
+
+Designed for a close-knit church group wanting to deepen relationships through fun, low-pressure activities. All games avoid intense physical activity and can be done entirely seated if needed. Each game includes a debrief with Bible verse connections.
+
+---
+
+## Game 1: "Life Auction"
+
+| Detail | Info |
+|--------|------|
+| Players | 10–30 (groups of 4–5, split couples) |
+| Time | 25–30 min (including debrief) |
+| Props | Paper and pen per person |
+| Difficulty | ★ Easy — rules in under 1 minute |
+
+### How to Play
+Each group starts with 5,000 virtual "Life Coins." The facilitator auctions off different "life items" one by one. Groups discuss and bid. Through their choices, participants reflect on what they truly value most.
+
+### Preparation
+Prepare 10–12 "Life Auction" items on a flip chart. Examples: *Good health*, *Children who believe*, *Financial freedom*, *A happy marriage*, *Travel the world*, *Inner peace*, *Wisdom*, *Faithful friends*, *Career success*, *Long life*.
+
+### Step-by-Step
+1. **Group up:** Count off 1–5 to form random groups. Keep couples apart.
+2. **Rules:** Minimum bid 100 coins; increments of 100. Each item takes no more than 1 minute.
+3. **Auction:** Present each item. Groups discuss, then raise hands to bid.
+4. After all items are auctioned, each group shares what they won — and why they chose it.
+
+### Facilitator Tips
+Build excitement: "Going once… going twice…!" For low-interest items, lower the starting bid or add a humorous spin. Watch for healthy disagreement within groups — that's where the real conversation begins.
+
+### Debrief Questions
+1. Which item did your group most want to win? Why?
+2. If you could only keep one, what would it be? What does that reveal about your values?
+3. Was there anything you personally wanted but your group didn't agree on? How did you handle that?
+4. "For where your treasure is, there your heart will be also." — Matthew 6:21 (NIV). What did this game surface about your own heart?
+
+---
+
+## Game 2: "Two Truths, One Lie"
+
+| Detail | Info |
+|--------|------|
+| Players | 10–30 (groups of 4–5) |
+| Time | 25–30 min (including debrief) |
+| Props | None |
+| Difficulty | ★ Very easy — rules in 30 seconds |
+
+### How to Play
+Each group sends a representative who shares three things about themselves — two true, one false. The false one should sound believable. Other groups vote on which is the lie.
+
+### Step-by-Step
+1. Groups prepare: each member thinks of 3 statements (2 true, 1 false).
+2. One representative steps forward and shares all three statements naturally.
+3. Other groups discuss for 30 seconds, then vote.
+4. Reveal the answer. Correct groups earn 1 point. Rotate until each group has had 2–3 turns.
+
+### Facilitator Tips
+Encourage surprising true facts ("I once gave a sermon in Swahili"). Remind presenters to say the false one with the same confidence as the true ones — no laughing! The reveal is always the best moment.
+
+### Debrief Questions
+1. Which statement surprised you the most?
+2. What clues did you use — expression, tone, or content?
+3. "The Lord detests lying lips, but he delights in people who are trustworthy." — Proverbs 12:22 (NIV). Why does honesty matter especially in a faith community?
+
+---
+
+## Game 3: "Synced Minds"
+
+| Detail | Info |
+|--------|------|
+| Players | 10–30 (groups of 4–5) |
+| Time | 20–25 min (including debrief) |
+| Props | Paper and pen per person |
+| Difficulty | ★ Easy — rules in under 1 minute |
+
+### How to Play
+The facilitator asks a question. Everyone writes their answer simultaneously without discussing. The more answers that match within a group, the higher the score. This tests not just what you think — but how well you can predict each other.
+
+### Sample Questions (low to high difficulty)
+- "Name a red fruit."
+- "Name a city in New Zealand."
+- "Name a worship song everyone in this room knows."
+- "Name something a husband and wife most need in common."
+- "If you could only bring one item to a desert island, what would it be?"
+- "Use one word to describe happiness."
+
+### Facilitator Tips
+Start with easy questions to warm up, then move to deeper ones. Celebrate when a whole group matches — it's always a surprise. The more personal questions create the richest conversations.
+
+### Debrief Questions
+1. Which question were you most confident about — and were you right?
+2. Were you writing your true answer, or guessing what others would write?
+3. "Make my joy complete by being like-minded, having the same love, being one in spirit and of one mind." — Philippians 2:2 (NIV). Does unity mean everyone must think the same? Or can people differ and still be one?
+
+---
+
+# Appendix: Facilitator Notes
+
+### Grouping Techniques
+- **Count-off:** Everyone counts 1–5. Same number = same group.
+- **Birthday months:** Line up by birth month, then divide evenly.
+- **Candy colours:** Hand out wrapped sweets; same colour = same group.
+
+### Time Management
+Choose 2–3 games per session — don't rush. Each game with debrief takes 25–30 minutes. Don't skip the debrief: it's where the real value is.
+
+### Safe Atmosphere
+- Emphasise fun over winning.
+- All games are team-based — no one is singled out.
+- Debrief questions are open-ended. Every contribution deserves affirmation.`;
+
+let sampleRendered = false;
+function renderSample() {
+  if (!sampleRendered) {
+    document.getElementById('sample-content').innerHTML = renderMarkdown(SAMPLE_MARKDOWN);
+    sampleRendered = true;
+  }
+}
+
+// ===== Step Navigation =====
+function goToStep(step) {
+  if (step === 5) buildSummary();
+  document.querySelectorAll('.step-content').forEach(s => s.style.display = 'none');
+  document.getElementById('step-' + step).style.display = 'block';
+  document.querySelectorAll('.step-item').forEach(item => {
+    const s = parseInt(item.dataset.step);
+    item.classList.remove('active', 'done');
+    if (s === step) item.classList.add('active');
+    else if (s < step) item.classList.add('done');
+  });
+  currentStep = step;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== Time Warning Mins by Game Type =====
+const GAME_TYPE_MIN_TIMES = {
+  'Icebreaker':              10,
+  'Team Building':           20,
+  'Competition':             15,
+  'Creative Collaboration':  20,
+  'Communication & Sharing': 15,
+  'Faith-based':             20,
+  'Problem Solving':         20,
+  'Drama & Role Play':       15,
+};
+
+function clearTimeWarning() {
+  document.getElementById('time-warning').style.display = 'none';
+  document.getElementById('f-availableTime').classList.remove('input-error');
+}
+
+function goToStep2Next() {
+  const timeVal = parseInt(document.getElementById('f-availableTime').value, 10);
+  const warningEl = document.getElementById('time-warning');
+
+  if (!timeVal || timeVal < 5) {
+    document.getElementById('f-availableTime').classList.add('input-error');
+    warningEl.innerHTML = '⚠️ <strong>Please enter at least 5 minutes.</strong>';
+    warningEl.style.display = 'block';
+    return;
+  }
+
+  const selectedTypes = getSelectedChips('cg-gametype');
+  let warnMessages = [];
+  selectedTypes.forEach(type => {
+    const minTime = GAME_TYPE_MIN_TIMES[type];
+    if (minTime && timeVal < minTime) {
+      warnMessages.push(`<strong>${type}</strong>: recommended minimum ${minTime} min`);
+    }
+  });
+
+  if (warnMessages.length > 0 && warningEl.style.display !== 'block') {
+    warningEl.innerHTML =
+      '⚠️ Time may be tight:<br>' +
+      warnMessages.join('<br>') +
+      '<br><br>' +
+      '<button class="btn btn-small btn-outline" style="margin-right:8px" onclick="clearTimeWarning()">' +
+        '← Adjust time' +
+      '</button>' +
+      '<button class="btn btn-small btn-primary" onclick="clearTimeWarning(); goToStep(3);">' +
+        'Proceed anyway →' +
+      '</button>';
+    warningEl.style.display = 'block';
+    return;
+  }
+
+  goToStep(3);
+}
+
+function selectRadio(el) {
+  const group = el.parentElement;
+  group.querySelectorAll('.radio-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  if (group.id === 'rg-relationship') updateDebriefLabel();
+}
+
+// ===== Checkbox Chips =====
+function toggleChip(el, event) {
+  if (event) event.preventDefault();
+  el.classList.toggle('selected');
+  const cb = el.querySelector('input[type="checkbox"]');
+  if (cb) cb.checked = el.classList.contains('selected');
+  const chipGroup = el.closest('.chip-group');
+  if (chipGroup && (chipGroup.id === 'cg-gametype' || chipGroup.id === 'cg-purposes')) {
+    updateDebriefLabel();
+  }
+}
+
+// ===== Toggles =====
+function toggleChildren() {
+  includeChildren = !includeChildren;
+  const toggle = document.getElementById('toggle-children');
+  const label = document.getElementById('toggle-children-label');
+  const section = document.getElementById('children-section');
+  toggle.classList.toggle('on', includeChildren);
+  label.textContent = includeChildren ? 'Include children ✓' : 'No children';
+  section.classList.toggle('show', includeChildren);
+}
+
+function toggleDebrief() {
+  includeDebrief = !includeDebrief;
+  const toggle = document.getElementById('toggle-debrief');
+  toggle.classList.toggle('on', includeDebrief);
+  updateDebriefLabel();
+}
+
+function updateDebriefLabel() {
+  const label = document.getElementById('toggle-debrief-label');
+  if (!label) return;
+  const relationship = getSelectedRadio('rg-relationship');
+  const gameTypes = getSelectedChips('cg-gametype');
+  const purposes = getSelectedChips('cg-purposes');
+  const isFaithContext = relationship === 'Church Members' ||
+                         gameTypes.includes('Faith-based') ||
+                         purposes.includes('Faith Reflection');
+  if (includeDebrief) {
+    label.textContent = isFaithContext
+      ? 'Include debrief (with Bible verse connections)'
+      : 'Include debrief';
+  } else {
+    label.textContent = 'No debrief';
+  }
+}
+
+// ===== Get Form Values =====
+function getSelectedRadio(groupId) {
+  const selected = document.querySelector('#' + groupId + ' .radio-chip.selected');
+  return selected ? selected.dataset.value : '';
+}
+
+function getSelectedChips(groupId) {
+  const chips = document.querySelectorAll('#' + groupId + ' .chip.selected');
+  return Array.from(chips).map(c => c.querySelector('input').value);
+}
+
+function getFormData() {
+  const restrictions = getSelectedChips('cg-restrictions');
+  const otherReq = document.getElementById('f-otherRequirements').value.trim();
+  const allRequirements = restrictions.concat(otherReq ? [otherReq] : []).join('; ');
+  const timeRaw = document.getElementById('f-availableTime').value.trim();
+
+  return {
+    ageRange: document.getElementById('f-ageRange').value.trim(),
+    participantCount: document.getElementById('f-participantCount').value.trim(),
+    relationship: getSelectedRadio('rg-relationship'),
+    familiarity: getSelectedRadio('rg-familiarity'),
+    includeChildren: includeChildren ? 'yes' : 'no',
+    childrenAgeRange: includeChildren ? document.getElementById('f-childrenAgeRange').value.trim() : '',
+    venue: getSelectedRadio('rg-venue'),
+    availableTime: timeRaw ? timeRaw + ' minutes' : '',
+    gameTypes: getSelectedChips('cg-gametype').join(', '),
+    gameCount: getSelectedRadio('rg-gamecount') || '3',
+    language: 'English',
+    specialRequirements: allRequirements,
+    groupingRule: getSelectedRadio('rg-grouping'),
+    purposes: getSelectedChips('cg-purposes').join(', '),
+    includeDebrief: includeDebrief ? 'yes' : 'no',
+    additionalNotes: document.getElementById('f-additionalNotes').value.trim(),
+    email: document.getElementById('f-email').value.trim()
+  };
+}
+
+// ===== Summary =====
+function buildSummary() {
+  const d = getFormData();
+  const lines = [];
+  const addLine = (icon, label, value) => {
+    if (value) lines.push(`<div style="margin:6px 0;"><strong>${icon} ${label}:</strong> ${value}</div>`);
+  };
+  addLine('👥', 'Age Range', d.ageRange);
+  addLine('💑', 'Relationship', d.relationship);
+  addLine('🔢', 'Headcount', d.participantCount);
+  addLine('🤝', 'Familiarity', d.familiarity);
+  if (d.includeChildren === 'yes') addLine('👶', 'Children', `Included (ages ${d.childrenAgeRange})`);
+  if (d.gameTypes) addLine('🎮', 'Game Types', d.gameTypes);
+  addLine('🏠', 'Venue', d.venue);
+  addLine('⏱️', 'Time', d.availableTime);
+  addLine('🎮', 'Number of Games', d.gameCount);
+  if (d.specialRequirements) addLine('⚠️', 'Special Requirements', d.specialRequirements);
+  addLine('🔀', 'Grouping', d.groupingRule);
+  addLine('🎯', 'Purpose', d.purposes);
+  addLine('💬', 'Debrief', d.includeDebrief === 'yes' ? 'Included' : 'Not included');
+  if (d.additionalNotes) addLine('📝', 'Additional Notes', d.additionalNotes);
+  if (d.email) addLine('📧', 'Email', d.email);
+  document.getElementById('summary-content').innerHTML = lines.join('');
+}
+
+// ===== Generate =====
+function generateGames() {
+  const data = getFormData();
+  data.action = 'generateGames';
+  currentMarkdownA = '';
+  currentMarkdownB = '';
+  currentWinner = 'A';
+  showingVersion = 'winner';
+  document.querySelectorAll('.step-content').forEach(s => s.style.display = 'none');
+  document.getElementById('step-generating').style.display = 'block';
+
+  const url = API_URL + '?action=generateGames&data=' + encodeURIComponent(JSON.stringify(data));
+  fetch(url)
+    .then(r => r.json())
+    .then(result => {
+      if (result.success) {
+        currentGameSetId = result.gameSetId;
+        currentMarkdown = result.markdownContent;
+        currentMarkdownA = result.markdownA || result.markdownContent;
+        currentMarkdownB = result.markdownB || result.markdownContent;
+        currentWinner = result.winner || 'A';
+        showResult(result.markdownContent);
+
+        const toggleBtn = document.getElementById('btn-toggle-version');
+        const badge = document.getElementById('version-badge');
+        if (result.hasRefs && currentMarkdownA !== currentMarkdownB) {
+          toggleBtn.style.display = 'inline-block';
+          const winLabel = currentWinner === 'A' ? '📚 Reference Version' : '🤖 Original Version';
+          badge.innerHTML = '✅ AI Recommended: ' + winLabel + ' (' + result.refCount + ' reference games matched)';
+          badge.style.display = 'block';
+        } else {
+          toggleBtn.style.display = 'none';
+          badge.style.display = 'none';
+        }
+
+        if (result.emailError) {
+          showToast('Games generated, but email failed: ' + result.emailError, 'error');
+        } else if (data.email) {
+          showToast('✅ Game booklet sent to ' + data.email, 'success');
+        }
+      } else {
+        showToast('Generation failed: ' + result.error, 'error');
+        goToStep(5);
+      }
+    })
+    .catch(err => {
+      showToast('Network error: ' + err.message, 'error');
+      goToStep(5);
+    });
+}
+
+// ===== Show Result =====
+function showResult(markdown) {
+  document.querySelectorAll('.step-content').forEach(s => s.style.display = 'none');
+  document.getElementById('step-result').style.display = 'block';
+  document.getElementById('step-progress').style.display = 'none';
+  document.getElementById('result-formatted').innerHTML = renderMarkdown(markdown);
+  document.getElementById('result-markdown').textContent = markdown;
+}
+
+function switchResultView(view, btn) {
+  document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('result-formatted').style.display = view === 'formatted' ? 'block' : 'none';
+  document.getElementById('result-markdown').style.display = view === 'markdown' ? 'block' : 'none';
+}
+
+function toggleVersion() {
+  if (showingVersion === 'winner') {
+    const altMarkdown = (currentWinner === 'A') ? currentMarkdownB : currentMarkdownA;
+    showResult(altMarkdown);
+    currentMarkdown = altMarkdown;
+    showingVersion = 'alt';
+    document.getElementById('btn-toggle-version').innerHTML = '🔄 Back to Recommended';
+    const altLabel = (currentWinner === 'A') ? '🤖 Original Version' : '📚 Reference Version';
+    document.getElementById('version-badge').innerHTML = '👀 Now showing: ' + altLabel;
+  } else {
+    const winMarkdown = (currentWinner === 'A') ? currentMarkdownA : currentMarkdownB;
+    showResult(winMarkdown);
+    currentMarkdown = winMarkdown;
+    showingVersion = 'winner';
+    document.getElementById('btn-toggle-version').innerHTML = '🔄 See Alternative';
+    const winLabel = (currentWinner === 'A') ? '📚 Reference Version' : '🤖 Original Version';
+    document.getElementById('version-badge').innerHTML = '✅ AI Recommended: ' + winLabel;
+  }
+}
+
+// ===== Simple Markdown Renderer =====
+function renderMarkdown(md) {
+  let html = md;
+  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/^---$/gm, '<hr>');
+
+  // Tables
+  const tableRegex = /(\|.+\|[\r\n]+)+/g;
+  html = html.replace(tableRegex, function(tableBlock) {
+    const rows = tableBlock.trim().split('\n').filter(r => r.trim());
+    if (rows.length < 2) return tableBlock;
+    let tableHtml = '<table>';
+    rows.forEach((row, idx) => {
+      const cells = row.split('|').filter(c => c.trim());
+      if (cells.every(c => c.trim().match(/^[-:]+$/))) return;
+      const tag = idx === 0 ? 'th' : 'td';
+      tableHtml += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+    });
+    tableHtml += '</table>';
+    return tableHtml;
+  });
+
+  // Ordered lists
+  html = html.replace(/^(\d+)\.\s+(.+)$/gm, '<li data-num="$1">$2</li>');
+  // Unordered lists
+  html = html.replace(/^[-•✔☐]\s+(.+)$/gm, '<li>$1</li>');
+  // Wrap lists
+  html = html.replace(/(<li[^>]*>[\s\S]*?<\/li>\n?)+/g, function(match) {
+    if (match.includes('data-num=')) {
+      return '<ol>' + match.replace(/ data-num="\d+"/g, '') + '</ol>';
+    }
+    return '<ul>' + match + '</ul>';
+  });
+
+  // Paragraphs
+  html = html.replace(/^(?!<[a-z/]|$)(.+)$/gm, '<p>$1</p>');
+  html = html.replace(/<p>\s*<\/p>/g, '');
+  return html;
+}
+
+// ===== Copy & Email =====
+function copyMarkdown() {
+  if (!currentMarkdown) return;
+  navigator.clipboard.writeText(currentMarkdown).then(() => {
+    showToast('✅ Markdown copied to clipboard', 'success');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = currentMarkdown;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ Copied', 'success');
+  });
+}
+
+function openEmailModal() {
+  const email = document.getElementById('f-email').value.trim();
+  document.getElementById('modal-email').value = email;
+  document.getElementById('email-modal').classList.add('show');
+}
+function closeEmailModal() {
+  document.getElementById('email-modal').classList.remove('show');
+}
+function sendEmail() {
+  const email = document.getElementById('modal-email').value.trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email address', 'error');
+    return;
+  }
+  if (!currentGameSetId) {
+    showToast('Game record not found', 'error');
+    return;
+  }
+  showToast('📧 Sending...', '');
+  const url = API_URL + '?action=sendGameEmail&gameSetId=' + encodeURIComponent(currentGameSetId) + '&email=' + encodeURIComponent(email);
+  fetch(url)
+    .then(r => r.json())
+    .then(result => {
+      if (result.success) {
+        showToast('✅ Sent to ' + email, 'success');
+        closeEmailModal();
+      } else {
+        showToast('Send failed: ' + result.error, 'error');
+      }
+    })
+    .catch(err => { showToast('Network error: ' + err.message, 'error'); });
+}
+
+// ===== History =====
+function loadHistory() {
+  const listEl = document.getElementById('history-list');
+  listEl.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading...</div></div>';
+  const url = API_URL + '?action=listGameSets';
+  fetch(url)
+    .then(r => r.json())
+    .then(result => {
+      if (result.success && result.gameSets && result.gameSets.length > 0) {
+        listEl.innerHTML = result.gameSets.map(g => `
+          <div class="history-card" onclick="loadGameSet('${g.id}')">
+            <div class="info">
+              <h4>${g.name || 'Team Building Activity'}</h4>
+              <p>${g.gameCount || '?'} games · ${g.venue || ''} ${g.purposes ? '· ' + g.purposes : ''}</p>
+            </div>
+            <div class="meta">${g.createdAt ? new Date(g.createdAt).toLocaleDateString() : ''}</div>
+            <div class="hc-arrow">›</div>
+          </div>
+        `).join('');
+      } else {
+        listEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:30px;">No history yet</p>';
+      }
+    })
+    .catch(err => {
+      listEl.innerHTML = '<p style="text-align:center;color:var(--danger);padding:30px;">Load failed: ' + err.message + '</p>';
+    });
+}
+
+function loadGameSet(gameSetId) {
+  showToast('Loading...', '');
+  const url = API_URL + '?action=getGameSet&gameSetId=' + encodeURIComponent(gameSetId);
+  fetch(url)
+    .then(r => r.json())
+    .then(result => {
+      if (result.success && result.gameSet.markdownContent) {
+        currentGameSetId = result.gameSet.id;
+        currentMarkdown = result.gameSet.markdownContent;
+        currentMarkdownA = '';
+        currentMarkdownB = '';
+        currentWinner = 'A';
+        showingVersion = 'winner';
+        document.getElementById('btn-toggle-version').style.display = 'none';
+        document.getElementById('version-badge').style.display = 'none';
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-create').classList.add('active');
+        showResult(result.gameSet.markdownContent);
+      } else {
+        showToast('Load failed', 'error');
+      }
+    })
+    .catch(err => { showToast('Network error: ' + err.message, 'error'); });
+}
+
+// ===== Reset =====
+function resetForm() {
+  document.getElementById('step-progress').style.display = 'flex';
+  goToStep(1);
+  currentGameSetId = null;
+  currentMarkdown = '';
+  currentMarkdownA = '';
+  currentMarkdownB = '';
+  currentWinner = 'A';
+  showingVersion = 'winner';
+  document.getElementById('btn-toggle-version').style.display = 'none';
+  document.getElementById('version-badge').style.display = 'none';
+
+  document.querySelectorAll('#step-1 .radio-chip').forEach(chip => chip.classList.remove('selected'));
+  const ageRange = document.getElementById('f-ageRange');
+  const participantCount = document.getElementById('f-participantCount');
+  if (ageRange) ageRange.value = '';
+  if (participantCount) participantCount.value = '';
+  const childrenToggle = document.getElementById('toggle-children');
+  if (childrenToggle) {
+    childrenToggle.classList.remove('on');
+    const childrenSection = document.getElementById('children-section');
+    if (childrenSection) childrenSection.classList.remove('show');
+  }
+  includeChildren = false;
+  const childrenLabel = document.getElementById('toggle-children-label');
+  if (childrenLabel) childrenLabel.textContent = 'No children';
+  const childrenAgeRange = document.getElementById('f-childrenAgeRange');
+  if (childrenAgeRange) childrenAgeRange.value = '';
+
+  document.querySelectorAll('#step-2 .chip input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.chip').classList.remove('selected');
+  });
+  document.querySelectorAll('#step-2 .radio-chip').forEach(chip => chip.classList.remove('selected'));
+  const availableTime = document.getElementById('f-availableTime');
+  if (availableTime) availableTime.value = '';
+
+  document.querySelectorAll('#step-3 .chip input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.chip').classList.remove('selected');
+  });
+  document.querySelectorAll('#step-3 .radio-chip').forEach(chip => chip.classList.remove('selected'));
+  const otherRequirements = document.getElementById('f-otherRequirements');
+  if (otherRequirements) otherRequirements.value = '';
+
+  document.querySelectorAll('#step-4 .chip input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.chip').classList.remove('selected');
+  });
+  const debriefToggle = document.getElementById('toggle-debrief');
+  const debriefLabel = document.getElementById('toggle-debrief-label');
+  if (debriefToggle) {
+    debriefToggle.classList.add('on');
+    if (debriefLabel) debriefLabel.textContent = 'Include debrief';
+  }
+  includeDebrief = true;
+  const additionalNotes = document.getElementById('f-additionalNotes');
+  if (additionalNotes) additionalNotes.value = '';
+  const emailField = document.getElementById('f-email');
+  if (emailField) emailField.value = '';
+}
+
+// ===== Toast =====
+function showToast(message, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => { toast.className = 'toast'; }, 3500);
+}
+</script>
+
+</body>
+</html>
