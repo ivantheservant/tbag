@@ -951,7 +951,7 @@
         <div class="loading">
           <div class="loading-spinner"></div>
           <div class="loading-text" id="loading-text">🎯 AI is designing your games...</div>
-          <div class="loading-sub" id="loading-sub">Usually takes 30–90 seconds, please wait...</div>
+          <div class="loading-sub" id="loading-sub">Usually takes 1–3 minutes. Please keep this tab open — closing it will lose your results.</div>
         </div>
       </div>
     </div>
@@ -1049,7 +1049,7 @@ function validateCode() {
   const url = API_URL + '?action=getAccessStatus&code=' + encodeURIComponent(code) + '&app=games';
   fetch(url).then(r => r.json()).then(result => {
     btn.disabled = false; btn.innerHTML = '🔓 Enter';
-    if (result.success) {
+    if (result.success && result.valid) {
       currentAccessCode = code;
       currentCredits = result.creditsRemaining !== undefined ? result.creditsRemaining : 0;
       sessionStorage.setItem('tbag_access_code', code);
